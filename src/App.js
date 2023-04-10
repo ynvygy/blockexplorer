@@ -1,5 +1,6 @@
 import { Alchemy, Network } from 'alchemy-sdk';
 import { useEffect, useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 import './App.css';
 
@@ -21,6 +22,41 @@ const alchemy = new Alchemy(settings);
 
 function App() {
   const [blockNumber, setBlockNumber] = useState();
+  const [transactions, setTransactions] = useState([]);
+  const [currentTransaction, setCurrentTransaction] = useState("");
+
+  const [blockInput, setBlockInput] = useState("")
+  const [blockResult, setBlockResult] = useState("")
+
+  const handleBlockInputChange = (event) => {
+    setBlockInput(event.target.value);
+  };
+
+  const handleBlockButtonClick = async () => {
+    const result = await getBlockResult(blockInput);
+    setBlockResult(JSON.stringify(result));
+  };
+
+  const handleTransactionButtonClick = async (transaction_number) => {
+    const result = await alchemy.core.getTransaction(`${transaction_number}`)
+    setCurrentTransaction(JSON.stringify(result))
+  }
+
+  async function getBlockResult(block_number) {
+    const response = await alchemy.core.getBlock(Number(block_number));
+    setTransactions(response.transactions)
+
+    return response;
+  }
+
+  function generateTransactionsButtons() {
+    return transactions.map((transaction, index) => (
+      <div key={index}>
+        <button onClick={() => handleTransactionButtonClick(transaction)}>Get {transaction} info</button>
+        <br />
+      </div>
+    ));
+  }
 
   useEffect(() => {
     async function getBlockNumber() {
@@ -30,7 +66,33 @@ function App() {
     getBlockNumber();
   });
 
-  return <div className="App">Block Number: {blockNumber}</div>;
+  return (
+    <>
+      <div><strong>Current block Number: {blockNumber}</strong></div>
+
+      <div>
+        <input type="text" value={blockInput} onChange={handleBlockInputChange} />
+        <button onClick={handleBlockButtonClick}>Get Block Info</button>
+        <br/>
+        <p><strong>Transactions in block number: {blockInput}</strong></p>
+        <div className="container">
+          <div className="row d-flex justify-content-between">
+            <div className="col-md-6">
+              <div>{generateTransactionsButtons()}</div>
+            </div>
+            <div className="col-md-6">
+              <p><strong>
+                Transaction info:</strong></p><br/>
+              <pre style={{whiteSpace: "pre-wrap"}}>
+                {currentTransaction}
+                </pre>
+              <div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }
 
 export default App;
