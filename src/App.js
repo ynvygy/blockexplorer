@@ -27,14 +27,21 @@ function App() {
 
   const [blockInput, setBlockInput] = useState("")
   const [blockResult, setBlockResult] = useState("")
+  const [blockError, setBlockError] = useState("")
 
   const handleBlockInputChange = (event) => {
     setBlockInput(event.target.value);
   };
 
   const handleBlockButtonClick = async () => {
-    const result = await getBlockResult(blockInput);
-    setBlockResult(JSON.stringify(result));
+    try {
+      const result = await getBlockResult(blockInput);
+      setBlockResult(JSON.stringify(result));
+      setBlockError("")
+    } catch {
+      setBlockResult("")
+      setBlockError("Block does not exist")
+    }
   };
 
   const handleTransactionButtonClick = async (transaction_number) => {
@@ -74,22 +81,46 @@ function App() {
         <input type="text" value={blockInput} onChange={handleBlockInputChange} />
         <button onClick={handleBlockButtonClick}>Get Block Info</button>
         <br/>
-        <p><strong>Transactions in block number: {blockInput}</strong></p>
-        <div className="container">
-          <div className="row d-flex justify-content-between">
-            <div className="col-md-6">
-              <div>{generateTransactionsButtons()}</div>
-            </div>
-            <div className="col-md-6">
-              <p><strong>
-                Transaction info:</strong></p><br/>
-              <pre style={{whiteSpace: "pre-wrap"}}>
-                {currentTransaction}
+        { blockResult ? (
+          <div>
+            <div className="row">
+              <div className="col-md-4">
+                <p>
+                  <strong>
+                    Block info:
+                  </strong>
+                </p>
+                <br/>
+                <pre style={{whiteSpace: "pre-wrap"}}>
+                  {blockResult}
                 </pre>
-              <div></div>
+              </div>
+
+              <div className="col-md-4">
+                <p>
+                  <strong>
+                    Transactions in block number: {blockInput}
+                  </strong>
+                </p>
+                <div>
+                  {generateTransactionsButtons()}
+                </div>
+              </div>
+
+              { currentTransaction ? (<div className="col-md-4">
+                <p>
+                  <strong>
+                    Transaction info:
+                  </strong>
+                </p>
+                <br/>
+                <pre style={{whiteSpace: "pre-wrap"}}>
+                  {currentTransaction}
+                </pre>
+              </div>) : (<div></div>) }
             </div>
           </div>
-        </div>
+        ) : (<div>{blockError}</div>) }
       </div>
     </>
   )
